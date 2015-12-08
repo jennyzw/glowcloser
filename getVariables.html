@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+<link rel="stylesheet" href="glowstyle.css">
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+
+<script>
+    $(document).bind('mobileinit',function(){
+        $.mobile.pushStateEnabled = false;
+    });
+</script>
+
+
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+<script src="http://anthonyterrien.com/js/jquery.knob.js"></script>
+
+ 
+<body>
+    <div data-role="page" id="pageone">
+        <div data-role="header">
+            <h1>GlowCloser</h1>
+        </div>
+
+        <div data-role="main" class="ui-content">
+
+            <!-- <button id="sendshake" onclick="shake()">Send Shake</button> -->
+            <!-- <button id="sendtilt" onclick="tilt()">Send Light</button> -->
+
+
+            <div class='circle-container'>
+                
+                
+                <a href='#' class='deg30'><div class="round-button" id="2"></div></a>
+                <a href='#' class='deg60'><div class="round-button" id="3"></div></a>
+                <a href='#' class='deg90'><div class="round-button" id="4"></div></a>
+                <a href='#' class='deg120'><div class="round-button" id="5"></div></a>
+                <a href='#' class='deg150'><div class="round-button" id="6"></div></a>
+                <a href='#' class='deg180'><div class="round-button" id="7"></div></a>
+                <a href='#' class='deg210'><div class="round-button" id="8"></div></a>
+                <a href='#' class='deg240'><div class="round-button" id="9"></div></a>
+                <a href='#' class='deg270'><div class="round-button" id="10"></div></a>
+                <a href='#' class='deg300'><div class="round-button" id="11"></div></a>
+                <a href='#' class='deg330'><div class="round-button" id="0"></div></a>
+                <a href='#' class='deg360'><div class="round-button" id="1"></div></a>
+            </div>
+
+</div>
+
+
+    <div style="text-align:center">
+        <input type="text" class="dial" data-min="0" data-max="11" data-fgColor="#00ADEF" data-angleOffset=30 data-angleArc=300 data-linecap=round data-displayInput=false data-width=300 data-height=300>
+    </div>
+
+<!-- controlKnob stuff -->
+
+    <div id="spark-login" />
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/sparkjs/0.2.0/spark.min.js"></script>
+
+    <script>
+      sparkLogin(function(data) {
+        console.log(data);
+        document.getElementById("spark-login").style.visibility = "hidden";
+        var devicesPr = spark.listDevices();
+        devicesPr.then(
+          function(devices){
+            console.log('Devices: ', devices);
+
+            var deviceID = devices[0].id;
+
+            //Look for a Spark device named "InternetButton"
+            for(var i = 0; i < devices.length; i++){
+                if(devices[i].name == "InternetButton"){
+                    deviceID = devices[i].id;
+                    break;
+                }
+            }
+
+            //
+            //  jQuery KNOB stuff
+            //
+            var callback = function(err, data) {
+                if (err) {
+                  console.log('An error occurred while getting core attrs:', err);
+                } else {
+                  console.log('Core attr retrieved successfully:', data);
+                }
+              };
+
+            //Call the Spark.function!
+            var sendApiRequest = function (v) {
+                console.log('setting lamp to ' + v);
+                spark.callFunction(deviceID, 'controller', v, callback);
+            };
+            var _timer = null,
+                lastValue = 0,
+                minDelta = 10;
+
+            //Called when the knob changes
+            var onChange = function (v) {
+                if (_timer) {
+                    clearTimeout(_timer);
+                }
+                if (Math.abs(v - lastValue) > minDelta) {
+                    lastValue = v;
+                    sendApiRequest(v);
+                    return;
+                }
+                _timer = setTimeout(function () {
+                    lastValue = v;
+                    sendApiRequest(v)
+                }, 50);
+            };
+
+            var bindPageEvents = function () {
+                $(".dial").knob({'change': onChange });
+            };
+
+            //
+            // on page startup
+            //
+            $(function () {
+
+                bindPageEvents();
+
+            });
+
+          },
+          function(err) {
+            console.log('List devices call failed: ', err);
+          }
+        );});
+    </script>
+<!-- end controlKnob stuff -->
+</div>
+
+
+</body>
+
+<!-- internet button communication stuff -->
+<script type="text/javascript">
+
+
+        var deviceID = "2e003d000d47343233323032";
+        var accessToken = "ea3db10e6245f2e7d27225827608d7a7117f17a3";
+        var eventSource = new EventSource("https://api.spark.io/v1/devices/" + deviceID + "/events/?access_token=" + accessToken);
+
+        eventSource.addEventListener('open', function(e) {
+            console.log("Opened!"); },false);
+
+        eventSource.addEventListener('error', function(e) {
+            console.log("Errored!"); },false);
+
+        eventSource.addEventListener('rainbow', function(e) {
+            allLedsOff();
+            var parsedData = JSON.parse(e.data);
+                if(parsedData.data == 1) {
+                    document.getElementById("1").style.background = "#ff0066";
+                    document.getElementById("2").style.background = "#ff5050";
+                    document.getElementById("3").style.background = "#ff9933";
+                    document.getElementById("4").style.background = "#ffff00";
+                    document.getElementById("5").style.background = "#99ff66";
+                    document.getElementById("6").style.background = "#66ff99";
+                    document.getElementById("7").style.background = "#66ffff";
+                    document.getElementById("8").style.background = "#66ccff";
+                    document.getElementById("9").style.background = "#3399ff";
+                    document.getElementById("10").style.background = "#3333cc";
+                    document.getElementById("11").style.background = "#9900ff";
+                    document.getElementById("0").style.background = "#ff1a1a";
+                }
+        }, false);
+
+        eventSource.addEventListener('led', function(e) {
+            allLedsOff();
+            var parsedData = JSON.parse(e.data);
+            console.log(parsedData);
+            document.getElementById(parsedData.data).style.background = "#00ff99";
+            document.getElementById((parsedData.data-1)%12).style.background = "#00ccff";
+            document.getElementById((parsedData.data-2)%12).style.background = "#3399ff";
+        }, false);
+
+
+
+
+
+
+
+ /*   window.setInterval(function() {
+
+        //var deviceID = "2e003d000d47343233323032";
+        var deviceID = "2e003d000d47343233323032";
+       //var accessToken = "79d778df45038f1e5c171d2bf3feae8279c11c4c";
+       var accessToken = "ea3db10e6245f2e7d27225827608d7a7117f17a3";
+        var varName = "led"
+        var led = "1"
+
+        requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + varName + "/?access_token=" + accessToken;
+        $.getJSON(requestURL, function(json) {
+                    console.log("led: " + json.result);
+                 if(json.result!="-1")   
+                    document.getElementById(json.result).style.background = "blue";
+                    for(var i = json.result; i>=0; i--) {
+                        document.getElementById((json.result)-i).style.background="blue";
+                    }
+
+                 });
+
+        requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + "rainbow" + "/?access_token=" + accessToken;
+        $.getJSON(requestURL, function(json) {
+                    console.log("rainbow: " + json.result);
+                 if(json.result=="1") {  
+                    document.getElementById("1").style.background = "#FF0000";
+                    document.getElementById("2").style.background = "#AA1100";
+                    document.getElementById("3").style.background = "#FF7700";
+                    document.getElementById("4").style.background = "#FFDD00";
+                    document.getElementById("5").style.background = "#FFBB11";
+                    document.getElementById("6").style.background = "#00FF00";
+                    document.getElementById("7").style.background = "#55AA00";
+                    document.getElementById("8").style.background = "#0000FF";
+                    document.getElementById("9").style.background = "#000055";
+                    document.getElementById("10").style.background = "#8A2BE2";
+                    document.getElementById("11").style.background = "#310062";
+                    document.getElementById("0").style.background = "#C77DF3";
+                }
+            });
+
+        //all leds off, essentially. couldn't figure out how to save result
+     //   setTimeout(allLedsOff, 4000);
+  //   allLedsOff();
+
+    }, 100);
+
+
+/*window.setInterval(function() {
+        allLedsOff();
+       //var deviceID = "2e003d000d47343233323032";
+        var deviceID = "2e003d000d47343233323032";
+       //var accessToken = "79d778df45038f1e5c171d2bf3feae8279c11c4c";
+       var accessToken = "ea3db10e6245f2e7d27225827608d7a7117f17a3";
+        var varName = "rainbow"
+
+        requestURL = "https://api.spark.io/v1/devices/" + deviceID + "/" + varName + "/?access_token=" + accessToken;
+        $.getJSON(requestURL, function(json) {
+                    console.log("rainbow: " + json.result);
+                 if(json.result=="1") {  
+                    document.getElementById("1").style.background = "#FF0000";
+                    document.getElementById("2").style.background = "#AA1100";
+                    document.getElementById("3").style.background = "#FF7700";
+                    document.getElementById("4").style.background = "#FFDD00";
+                    document.getElementById("5").style.background = "#FFBB11";
+                    document.getElementById("6").style.background = "#00FF00";
+                    document.getElementById("7").style.background = "#55AA00";
+                    document.getElementById("8").style.background = "#0000FF";
+                    document.getElementById("9").style.background = "#000055";
+                    document.getElementById("10").style.background = "#8A2BE2";
+                    document.getElementById("11").style.background = "#310062";
+                    document.getElementById("0").style.background = "#C77DF3";
+                }
+
+                 });
+    }, 200); */
+
+</script>
+<script>
+function allLedsOff() {
+        document.getElementById("1").style.background="#cfdcec";
+        document.getElementById("2").style.background="#cfdcec";
+        document.getElementById("3").style.background="#cfdcec";
+        document.getElementById("4").style.background="#cfdcec";
+        document.getElementById("5").style.background="#cfdcec";
+        document.getElementById("6").style.background="#cfdcec";
+        document.getElementById("7").style.background="#cfdcec";
+        document.getElementById("8").style.background="#cfdcec";
+        document.getElementById("9").style.background="#cfdcec";
+        document.getElementById("10").style.background="#cfdcec";
+        document.getElementById("11").style.background="#cfdcec";
+        document.getElementById("0").style.background="#cfdcec";
+    }
+</script>
+
+
+
+
+
+
+
+
+</html>
